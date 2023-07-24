@@ -1,8 +1,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
+    import { colors } from "../lib";
 
-    type Tool = "WALL" | "SOURCE" | "TARGET" | "OPEN" | "VISITED";
+    type Tool = "WALL" | "SOURCE" | "TARGET" | "OPEN" | ["VISITED", number];
     type Type = "CONSTRUCT" | "DESTROY";
     type Grid = Array<Array<Tool>>;
 
@@ -10,11 +11,10 @@
 
     let TYPE: Type = "CONSTRUCT";
     let TOOL: Tool = "WALL";
+    let GRID_WIDTH = 0;
+    let GRID_HEIGHT = 0;
 
-    onMount(() => {
-        const GRID_WIDTH = Math.ceil(window.innerWidth / 75);
-        const GRID_HEIGHT = Math.ceil(window.innerHeight / 75);
-
+    const generate_grid = () => {
         let grid: Array<Array<Tool>> = [...Array(GRID_HEIGHT)].map((_, x) =>
             [...Array(GRID_WIDTH)].map((_, y) => {
                 if (
@@ -31,6 +31,12 @@
         );
 
         gridStore.set(grid);
+    };
+
+    onMount(() => {
+        GRID_WIDTH = Math.ceil(window.innerWidth / 50);
+        GRID_HEIGHT = Math.ceil(window.innerHeight / 50) - 1;
+        generate_grid();
     });
 
     let s = [0, 0];
@@ -39,13 +45,19 @@
     const place = (r: number, c: number) => {
         if (TYPE === "CONSTRUCT") {
             if (TOOL === "SOURCE") {
-                $gridStore[r][c] = "SOURCE";
-                if (s[0] !== 0 && s[1] !== 0) $gridStore[s[0]][s[1]] = "OPEN";
-                s = [r, c];
+                if ($gridStore[r][c] === "OPEN") {
+                    $gridStore[r][c] = "SOURCE";
+                    if (s[0] !== 0 && s[1] !== 0)
+                        $gridStore[s[0]][s[1]] = "OPEN";
+                    s = [r, c];
+                }
             } else if (TOOL === "TARGET") {
-                $gridStore[r][c] = "TARGET";
-                if (t[0] !== 0 && t[1] !== 0) $gridStore[t[0]][t[1]] = "OPEN";
-                t = [r, c];
+                if ($gridStore[r][c] === "OPEN") {
+                    $gridStore[r][c] = "TARGET";
+                    if (t[0] !== 0 && t[1] !== 0)
+                        $gridStore[t[0]][t[1]] = "OPEN";
+                    t = [r, c];
+                }
             } else if (TOOL === "WALL") {
                 $gridStore[r][c] = "WALL";
             }
@@ -94,7 +106,7 @@
                         return;
                     }
                     count = Math.max(count, nl);
-                    grid[nx][ny] = "VISITED";
+                    grid[nx][ny] = ["VISITED", nl];
                     queue.push([[nx, ny], nl]);
                 }
             }
@@ -108,11 +120,14 @@
 </script>
 
 <div
-    class="absolute flex flex-row align-center justify-between bottom-20 left-24 z-50 bg-blur-10 w-[80%] py-3"
+    class="flex flex-row align-center justify-between z-50 bg-blur-10 w-full h-[50px] px-1"
 >
-    <div>
+    <div class="flex flex-row align-center justify-start py-1 w-full">
         <button
-            class="border-black p-2 px-4 bg-white border-2"
+            style="background-color: {TYPE === 'CONSTRUCT'
+                ? '#FFAAAA'
+                : 'white'};"
+            class="border-black px-4 border-2 mr-1"
             on:click={() => {
                 TYPE = "CONSTRUCT";
             }}
@@ -120,15 +135,20 @@
             CONSTRUCT
         </button>
         <button
-            class="border-black p-2 px-4 bg-red-200 border-2"
+            style="background-color: {TYPE === 'DESTROY'
+                ? '#FFAAAA'
+                : 'white'};"
+            class="border-black px-4 border-2 mr-1"
             on:click={() => {
                 TYPE = "DESTROY";
             }}
         >
             DESTROY
         </button>
+        <div class="flex flex-col items-center justify-center mr-1">|</div>
         <button
-            class="border-black p-2 px-4 bg-[#c0ffaa]"
+            style="background-color: {TOOL === 'SOURCE' ? '#c0ffaa' : 'white'};"
+            class="border-black px-4 bg-[#c0ffaa] border-2 mr-1"
             on:click={() => {
                 TOOL = "SOURCE";
             }}
@@ -136,7 +156,8 @@
             SOURCE
         </button>
         <button
-            class="border-black p-2 px-4 bg-[#ffe7aa]"
+            style="background-color: {TOOL === 'TARGET' ? '#ffe7aa' : 'white'};"
+            class="border-black px-4 bg-[#ffe7aa] border-2 mr-1"
             on:click={() => {
                 TOOL = "TARGET";
             }}
@@ -144,7 +165,10 @@
             TARGET
         </button>
         <button
-            class="border-black p-2 px-4 bg-black text-white"
+            style="background-color: {TOOL === 'WALL'
+                ? 'black'
+                : 'white'};color: {TOOL === 'WALL' ? 'white' : 'black'};"
+            class="border-black px-4 border-2"
             on:click={() => {
                 TOOL = "WALL";
             }}
@@ -152,12 +176,18 @@
             WALL
         </button>
     </div>
-    <div>
+    <div class="flex flex-row align-center justify-end py-1 w-full">
         <button
-            class="border-black p-2 px-4 bg-black text-white"
+            class="border-black px-4 bg-[#ACDCFF] text-blue border-2 mr-1"
             on:click={() => bfs(s[0], s[1])}
         >
             SEARCH
+        </button>
+        <button
+            class="border-black px-4 bg-[#D1ACFF] text-blue border-2"
+            on:click={generate_grid}
+        >
+            RESET
         </button>
     </div>
 </div>
@@ -173,16 +203,15 @@
                         ? '#c0ffaa'
                         : cell === 'TARGET'
                         ? '#ffe7aa'
-                        : cell === 'VISITED'
-                        ? '#ACDCFF'
                         : cell === 'OPEN'
                         ? '#ffffff'
+                        : cell[0] === 'VISITED'
+                        ? colors[cell[1]]
                         : '#ffaaaa'}"
-                    class="w-[75px] h-[75px]"
-                    class:wall={TYPE === "CONSTRUCT" && TOOL === "WALL"}
-                    class:source={TYPE === "CONSTRUCT" && TOOL === "SOURCE"}
-                    class:target={TYPE === "CONSTRUCT" && TOOL === "TARGET"}
-                    class:destroy={TYPE !== "CONSTRUCT"}
+                    class="w-[50px] h-[50px] border-[0.5px] border-black {cell ==
+                    'OPEN'
+                        ? 'hover:scale-105 hover:border-2'
+                        : ''} transition-all"
                     on:click={() => {
                         place(id_x, id_y);
                     }}
@@ -191,21 +220,3 @@
         </div>
     {/each}
 </div>
-
-<style>
-    .wall:hover {
-        background-color: #101010;
-    }
-
-    .source:hover {
-        background-color: #c0ffaa;
-    }
-
-    .target:hover {
-        background-color: #ffe7aa;
-    }
-
-    .destroy:hover {
-        background-color: #ffaaaa;
-    }
-</style>
