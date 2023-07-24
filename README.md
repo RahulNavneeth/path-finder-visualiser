@@ -1,38 +1,9 @@
-# create-svelte
+# PATH-FINDER-VISUALISER
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+https://github.com/RahulNavneeth/path-finder-visualiser/assets/50259284/3bcfe2e1-101b-4c60-aed7-35d97fd94693
 
-## Creating a project
+https://github.com/RahulNavneeth/path-finder-visualiser/assets/50259284/1f3a4ce4-c722-43db-b24b-50fd94103e96
 
-If you're seeing this, you've probably already done this step. Congrats!
+<img width="1727" alt="Screenshot 2023-07-23 at 11 43 47 PM" src="https://github.com/RahulNavneeth/path-finder-visualiser/assets/50259284/78959bfd-0cb2-4603-bf51-bbd46891f4eb">
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```bash
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+**NOTE**: On active development
