@@ -2,6 +2,7 @@
     import { onMount } from "svelte";
     import { writable } from "svelte/store";
     import { colors } from "../lib";
+    import { modal } from "$lib/store/modal";
 
     type Tool = "WALL" | "SOURCE" | "TARGET" | "OPEN" | ["VISITED", number];
     type Type = "CONSTRUCT" | "DESTROY";
@@ -73,6 +74,22 @@
     };
 
     const bfs = (r: number, c: number) => {
+        if (!t[0] && !t[1]) {
+            modal.set({
+                show: true,
+                message: "TARGET NOT SET",
+                type: "WARNING",
+            });
+            return;
+        }
+        if (!s[0] && !s[1]) {
+            modal.set({
+                show: true,
+                message: "SOURCE NOT SET",
+                type: "WARNING",
+            });
+            return;
+        }
         const queue: Array<[[number, number], number]> = [];
         queue.push([[r, c], 0]);
 
@@ -80,7 +97,14 @@
         let count = 0;
 
         const processNextNode = () => {
-            if (queue.length === 0) return;
+            if (queue.length === 0) {
+                modal.set({
+                    show: true,
+                    message: "TARGET NOT FOUND",
+                    type: "ERROR",
+                });
+                return;
+            }
 
             const [[x, y], w] = queue.shift() || [[0, 0], 0];
 
@@ -102,7 +126,11 @@
                 if (grid[nx][ny] === "OPEN" || grid[nx][ny] === "TARGET") {
                     let nl = w + 1;
                     if (grid[nx][ny] === "TARGET") {
-                        alert("FOUND");
+                        modal.set({
+                            show: true,
+                            message: `TARGET FOUND AT (${nx}, ${ny})`,
+                            type: "SUCCESS",
+                        });
                         return;
                     }
                     count = Math.max(count, nl);
@@ -116,7 +144,6 @@
 
         processNextNode();
     };
-    $: console.log($gridStore);
 </script>
 
 <div
@@ -179,7 +206,7 @@
     <div class="flex flex-row align-center justify-end py-1 w-full">
         <button
             class="border-black px-4 bg-[#ACDCFF] text-blue border-2 mr-1"
-            on:click={() => bfs(s[0], s[1])}
+            on:click={() => console.log(bfs(s[0], s[1]))}
         >
             SEARCH
         </button>
@@ -206,16 +233,24 @@
                         : cell === 'OPEN'
                         ? '#ffffff'
                         : cell[0] === 'VISITED'
-                        ? colors[cell[1]]
-                        : '#ffaaaa'}"
-                    class="w-[50px] h-[50px] border-[0.5px] border-black {cell ==
-                    'OPEN'
+                        ? colors[colors.length - 1 - (cell[1] % colors.length)]
+                        : '#ffaaaa'};
+                        border : {cell === 'SOURCE' || cell === 'TARGET'
+                        ? '2px'
+                        : '0.5px'} solid black;
+                        "
+                    class="w-[50px] h-[50px] {cell == 'OPEN'
                         ? 'hover:scale-105 hover:border-2'
                         : ''} transition-all"
                     on:click={() => {
                         place(id_x, id_y);
                     }}
-                />
+                    >{cell === "SOURCE"
+                        ? "S"
+                        : cell === "TARGET"
+                        ? "T"
+                        : ""}</button
+                >
             {/each}
         </div>
     {/each}
